@@ -1,7 +1,12 @@
 package uk.gov.hmcts.cmc.claimstore.repositories;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cmc.ccd.domain.CaseEvent;
 import uk.gov.hmcts.cmc.claimstore.idam.models.User;
+import uk.gov.hmcts.cmc.claimstore.services.UserService;
+import uk.gov.hmcts.cmc.claimstore.services.ccd.CoreCaseDataService;
+import uk.gov.hmcts.cmc.claimstore.stereotypes.LogExecutionTime;
 import uk.gov.hmcts.cmc.domain.models.Claim;
 import uk.gov.hmcts.cmc.domain.models.ClaimDocumentCollection;
 import uk.gov.hmcts.cmc.domain.models.ClaimDocumentType;
@@ -11,6 +16,7 @@ import uk.gov.hmcts.cmc.domain.models.CountyCourtJudgment;
 import uk.gov.hmcts.cmc.domain.models.PaidInFull;
 import uk.gov.hmcts.cmc.domain.models.ReDetermination;
 import uk.gov.hmcts.cmc.domain.models.claimantresponse.ClaimantResponse;
+import uk.gov.hmcts.cmc.domain.models.offers.MadeBy;
 import uk.gov.hmcts.cmc.domain.models.offers.Settlement;
 import uk.gov.hmcts.cmc.domain.models.response.Response;
 
@@ -18,74 +24,175 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface CaseRepository {
-    List<Claim> getBySubmitterId(String submitterId, String authorisation);
+import static uk.gov.hmcts.cmc.ccd.domain.CaseEvent.REFER_TO_JUDGE_BY_DEFENDANT;
+import static uk.gov.hmcts.cmc.domain.utils.LocalDateTimeFactory.nowInUTC;
 
-    Optional<Claim> getClaimByExternalId(String externalId, User user);
+@Service
+public class CaseRepository {
+    private final CCDCaseApi ccdCaseApi;
+    private final CoreCaseDataService coreCaseDataService;
+    private final UserService userService;
 
-    Optional<Claim> getByClaimReferenceNumber(String claimReferenceNumber, String authorisation);
+    @Autowired
+    public CaseRepository(
+        CCDCaseApi ccdCaseApi,
+        CoreCaseDataService coreCaseDataService,
+        UserService userService
+    ) {
+        this.ccdCaseApi = ccdCaseApi;
+        this.coreCaseDataService = coreCaseDataService;
+        this.userService = userService;
+    }
 
-    void saveCountyCourtJudgment(
+    public List<Claim> getBySubmitterId(String submitterId, String authorisation) {
+        return ccdCaseApi.getBySubmitterId(submitterId, authorisation);
+    }
+
+    @LogExecutionTime
+    public Optional<Claim> getClaimByExternalId(String externalId, User user) {
+        return ccdCaseApi.getByExternalId(externalId, user);
+    }
+
+    @LogExecutionTime
+    public Optional<Claim> getClaimByExternalId(String externalId, String authorization) {
+        return ccdCaseApi.getByExternalId(externalId, userService.getUser(authorization));
+    }
+
+    public Optional<Claim> getByClaimReferenceNumber(String claimReferenceNumber, String authorisation) {
+        return ccdCaseApi.getByReferenceNumber(claimReferenceNumber, authorisation);
+    }
+
+    public void linkDefendant(String authorisation) {
+        ccdCaseApi.linkDefendant(authorisation);
+    }
+
+    public List<Claim> getByDefendantId(String id, String authorisation) {
+        return ccdCaseApi.getByDefendantId(id, authorisation);
+    }
+
+    public List<Claim> getByClaimantEmail(String email, String authorisation) {
+        return ccdCaseApi.getBySubmitterEmail(email, authorisation);
+    }
+
+    public List<Claim> getByDefendantEmail(String email, String authorisation) {
+        return ccdCaseApi.getByDefendantEmail(email, authorisation);
+    }
+
+    public List<Claim> getByPaymentReference(String payReference, String authorisation) {
+        return ccdCaseApi.getByPaymentReference(payReference, authorisation);
+    }
+
+    public List<Claim> getClaimsByState(ClaimState claimState, User user) {
+        return ccdCaseApi.getClaimsByState(claimState, user);
+    }
+
+    public Optional<Claim> getByLetterHolderId(String id, String authorisation) {
+        return ccdCaseApi.getByLetterHolderId(id, authorisation);
+    }
+
+    public void saveCountyCourtJudgment(
         String authorisation,
         Claim claim,
         CountyCourtJudgment countyCourtJudgment
-    );
+    ) {
+        coreCaseDataService.saveCountyCourtJudgment(authorisation, claim.getId(), countyCourtJudgment);
+    }
 
-    void saveDefendantResponse(
+    public void saveDefendantResponse(
         Claim claim,
         String defendantEmail,
         Response response,
         LocalDate claimantResponseDeadline,
         String authorization
-    );
+    ) {
+        coreCaseDataService.saveDefendantResponse(claim.getId(), defendantEmail, response, authorization);
+    }
 
-    Claim saveClaimantResponse(Claim claim, ClaimantResponse response, String authorization);
+    public Claim saveClaimantResponse(Claim claim, ClaimantResponse response, String authorization) {
+        return coreCaseDataService.saveClaimantResponse(claim.getId(), response, authorization);
+    }
 
-    void paidInFull(Claim claim, PaidInFull paidInFull, String authorisation);
+    public void paidInFull(Claim claim, PaidInFull paidInFull, String authorisation) {
+        coreCaseDataService.savePaidInFull(claim.getId(), paidInFull, authorisation);
+    }
 
-    void updateDirectionsQuestionnaireDeadline(Claim claim, LocalDate dqDeadline, String authorization);
+    public void updateDirectionsQuestionnaireDeadline(Claim claim, LocalDate dqDeadline, String authorization) {
+        coreCaseDataService.saveDirectionsQuestionnaireDeadline(claim.getId(), dqDeadline, authorization);
+    }
 
-    void linkDefendant(String authorisation);
+    public void requestMoreTimeForResponse(String authorisation, Claim claim, LocalDate newResponseDeadline) {
+        coreCaseDataService.requestMoreTimeForResponse(authorisation, claim, newResponseDeadline);
+    }
 
-    List<Claim> getByDefendantId(String id, String authorisation);
+    public void updateSettlement(
+        Claim claim,
+        Settlement settlement,
+        String authorisation,
+        CaseEvent caseEvent
+    ) {
+        coreCaseDataService.saveSettlement(claim.getId(), settlement, authorisation, caseEvent);
+    }
 
-    List<Claim> getByClaimantEmail(String email, String authorisation);
+    public void reachSettlementAgreement(
+        Claim claim,
+        Settlement settlement,
+        String authorisation,
+        CaseEvent caseEvent
+    ) {
+        coreCaseDataService.reachSettlementAgreement(claim.getId(), settlement, nowInUTC(), authorisation,
+            caseEvent);
+    }
 
-    List<Claim> getByDefendantEmail(String email, String authorisation);
+    public Claim saveClaim(User user, Claim claim) {
+        return coreCaseDataService.createNewCase(user, claim);
+    }
 
-    List<Claim> getByPaymentReference(String payReference, String authorisation);
-
-    List<Claim> getClaimsByState(ClaimState claimState, User user);
-
-    Optional<Claim> getByLetterHolderId(String id, String authorisation);
-
-    void requestMoreTimeForResponse(String authorisation, Claim claim, LocalDate newResponseDeadline);
-
-    void updateSettlement(Claim claim, Settlement settlement, String authorisation, CaseEvent caseEvent);
-
-    void reachSettlementAgreement(Claim claim, Settlement settlement, String authorisation, CaseEvent caseEvent);
-
-    Claim saveClaim(User user, Claim claim);
-
-    void saveReDetermination(String authorisation, Claim claim, ReDetermination reDetermination);
-
-    void saveCaseEvent(String authorisation, Claim claim, CaseEvent caseEvent);
-
-    Claim saveClaimDocuments(
+    public Claim saveClaimDocuments(
         String authorisation,
         Long claimId,
         ClaimDocumentCollection claimDocumentCollection,
         ClaimDocumentType claimDocumentType
-    );
+    ) {
+        return coreCaseDataService
+            .saveClaimDocuments(authorisation, claimId, claimDocumentCollection, claimDocumentType);
+    }
 
-    Claim updateClaimSubmissionOperationStatus(
+    public Claim linkLetterHolder(Long claimId, String letterHolderId) {
+        return coreCaseDataService.linkLetterHolder(claimId, letterHolderId);
+    }
+
+    public Claim updateClaimSubmissionOperationStatus(String authorisation, Long claimId,
+                                                      ClaimSubmissionOperationIndicators indicators,
+                                                      CaseEvent caseEvent) {
+        return
+            coreCaseDataService.saveClaimSubmissionOperationIndicators(claimId, indicators, authorisation, caseEvent);
+    }
+
+    public void saveReDetermination(
         String authorisation,
-        Long claimId,
-        ClaimSubmissionOperationIndicators indicators,
-        CaseEvent caseEvent);
+        Claim claim,
+        ReDetermination reDetermination
+    ) {
+        CaseEvent event = reDetermination.getPartyType() == MadeBy.DEFENDANT
+            ? REFER_TO_JUDGE_BY_DEFENDANT
+            : CaseEvent.REFER_TO_JUDGE_BY_CLAIMANT;
 
-    void updateClaimState(String authorisation, Long claimId, ClaimState state);
+        coreCaseDataService.saveReDetermination(authorisation, claim.getId(), reDetermination, event);
+    }
 
-    Claim linkLetterHolder(Long claimId, String letterHolderId);
+    public void saveCaseEvent(String authorisation, Claim claim, CaseEvent caseEvent) {
+        coreCaseDataService.saveCaseEvent(authorisation, claim.getId(), caseEvent);
+    }
+
+    public void updateClaimState(String authorisation, Long claimId, ClaimState state) {
+        if (state == ClaimState.OPEN) {
+            coreCaseDataService.saveCaseEvent(authorisation, claimId, CaseEvent.ISSUE_CASE);
+        } else {
+            throw new UnsupportedOperationException("State transition not allowed for " + state.name());
+        }
+    }
+
+    public List<Claim> getByExternalReference(String externalReference, String authorization) {
+        return ccdCaseApi.getByExternalReference(externalReference, authorization);
+    }
 }
-

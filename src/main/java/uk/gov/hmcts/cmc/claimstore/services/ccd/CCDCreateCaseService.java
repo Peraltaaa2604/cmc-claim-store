@@ -1,7 +1,6 @@
 package uk.gov.hmcts.cmc.claimstore.services.ccd;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.cmc.claimstore.idam.models.User;
 import uk.gov.hmcts.cmc.claimstore.services.UserService;
@@ -19,7 +18,6 @@ import static uk.gov.hmcts.cmc.claimstore.repositories.CCDCaseApi.CASE_TYPE_ID;
 import static uk.gov.hmcts.cmc.claimstore.repositories.CCDCaseApi.JURISDICTION_ID;
 
 @Component
-@ConditionalOnProperty(prefix = "core_case_data", name = "api.url")
 public class CCDCreateCaseService {
 
     private final CoreCaseDataApi coreCaseDataApi;

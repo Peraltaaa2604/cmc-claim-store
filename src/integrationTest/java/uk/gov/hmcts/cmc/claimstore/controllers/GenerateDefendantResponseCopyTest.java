@@ -1,7 +1,6 @@
 package uk.gov.hmcts.cmc.claimstore.controllers;
 
 import org.junit.Test;
-import org.springframework.test.context.TestPropertySource;
 import uk.gov.hmcts.cmc.claimstore.BaseGetTest;
 import uk.gov.hmcts.cmc.domain.models.Claim;
 import uk.gov.hmcts.cmc.domain.models.sampledata.SampleClaimData;
@@ -13,13 +12,8 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=false"
-    }
-)
 public class GenerateDefendantResponseCopyTest extends BaseGetTest {
-    private static final byte[] PDF_BYTES = new byte[]{1, 2, 3, 4};
+    private static final byte[] PDF_BYTES = new byte[] {1, 2, 3, 4};
 
     @Test
     public void shouldReturnPdfDocumentIfEverythingIsFine() throws Exception {

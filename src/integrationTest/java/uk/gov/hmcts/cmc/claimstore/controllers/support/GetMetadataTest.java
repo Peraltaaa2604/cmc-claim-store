@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpHeaders;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.cmc.claimstore.BaseGetTest;
 import uk.gov.hmcts.cmc.claimstore.idam.models.User;
@@ -30,11 +29,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.cmc.domain.models.ClaimState.CREATE;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=false"
-    }
-)
 public class GetMetadataTest extends BaseGetTest {
 
     private static final String ANONYMOUS_CASEWORKER_ID = "100";

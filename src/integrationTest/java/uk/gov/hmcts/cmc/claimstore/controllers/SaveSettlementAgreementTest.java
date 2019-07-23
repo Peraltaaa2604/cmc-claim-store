@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.hmcts.cmc.claimstore.BaseIntegrationTest;
@@ -52,11 +51,6 @@ import static uk.gov.hmcts.cmc.claimstore.utils.ResourceLoader.successfulDocumen
 import static uk.gov.hmcts.cmc.claimstore.utils.ResourceLoader.unsuccessfulDocumentManagementUploadResponse;
 import static uk.gov.hmcts.cmc.domain.models.offers.MadeBy.DEFENDANT;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=false"
-    }
-)
 public class SaveSettlementAgreementTest extends BaseIntegrationTest {
 
     private Claim claim;

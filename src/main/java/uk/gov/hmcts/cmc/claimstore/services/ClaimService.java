@@ -12,9 +12,7 @@ import uk.gov.hmcts.cmc.claimstore.exceptions.NotFoundException;
 import uk.gov.hmcts.cmc.claimstore.idam.models.GeneratePinResponse;
 import uk.gov.hmcts.cmc.claimstore.idam.models.User;
 import uk.gov.hmcts.cmc.claimstore.idam.models.UserDetails;
-import uk.gov.hmcts.cmc.claimstore.repositories.CCDCaseRepository;
 import uk.gov.hmcts.cmc.claimstore.repositories.CaseRepository;
-import uk.gov.hmcts.cmc.claimstore.repositories.ClaimRepository;
 import uk.gov.hmcts.cmc.claimstore.rules.ClaimAuthorisationRule;
 import uk.gov.hmcts.cmc.claimstore.rules.MoreTimeRequestRule;
 import uk.gov.hmcts.cmc.claimstore.rules.PaidInFullRule;
@@ -49,7 +47,6 @@ import static uk.gov.hmcts.cmc.domain.utils.LocalDateTimeFactory.nowInLocalZone;
 @Component
 public class ClaimService {
 
-    private final ClaimRepository claimRepository;
     private final IssueDateCalculator issueDateCalculator;
     private final ResponseDeadlineCalculator responseDeadlineCalculator;
     private final DirectionsQuestionnaireDeadlineCalculator directionsQuestionnaireDeadlineCalculator;
@@ -69,7 +66,6 @@ public class ClaimService {
     @SuppressWarnings("squid:S00107") //Constructor need all parameters
     @Autowired
     public ClaimService(
-        ClaimRepository claimRepository,
         CaseRepository caseRepository,
         UserService userService,
         IssueDateCalculator issueDateCalculator,
@@ -82,7 +78,6 @@ public class ClaimService {
         ClaimAuthorisationRule claimAuthorisationRule,
         @Value("${feature_toggles.async_event_operations_enabled:false}") boolean asyncEventOperationEnabled
     ) {
-        this.claimRepository = claimRepository;
         this.userService = userService;
         this.issueDateCalculator = issueDateCalculator;
         this.responseDeadlineCalculator = responseDeadlineCalculator;
@@ -94,12 +89,6 @@ public class ClaimService {
         this.paidInFullRule = paidInFullRule;
         this.claimAuthorisationRule = claimAuthorisationRule;
         this.asyncEventOperationEnabled = asyncEventOperationEnabled;
-    }
-
-    public Claim getClaimById(long claimId) {
-        return claimRepository
-            .getById(claimId)
-            .orElseThrow(() -> new NotFoundException("Claim not found by id " + claimId));
     }
 
     public List<Claim> getClaimBySubmitterId(String submitterId, String authorisation) {
@@ -144,7 +133,7 @@ public class ClaimService {
     public Optional<Claim> getClaimByReferenceAnonymous(String reference) {
         String authorisation = null;
 
-        if (caseRepository instanceof CCDCaseRepository) {
+        if (caseRepository instanceof CaseRepository) {
             User user = userService.authenticateAnonymousCaseWorker();
             authorisation = user.getAuthorisation();
         }
@@ -153,9 +142,7 @@ public class ClaimService {
     }
 
     public List<Claim> getClaimByExternalReference(String externalReference, String authorisation) {
-        String submitterId = userService.getUserDetails(authorisation).getId();
-
-        return claimRepository.getByExternalReference(externalReference, submitterId);
+        return caseRepository.getByExternalReference(externalReference, authorisation);
     }
 
     public List<Claim> getClaimByDefendantId(String id, String authorisation) {

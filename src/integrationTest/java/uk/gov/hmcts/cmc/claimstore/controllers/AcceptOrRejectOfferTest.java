@@ -4,7 +4,6 @@ import org.junit.Test;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 import uk.gov.hmcts.cmc.claimstore.BaseOfferTest;
 import uk.gov.hmcts.cmc.claimstore.services.OffersService;
@@ -23,11 +22,6 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=false"
-    }
-)
 public class AcceptOrRejectOfferTest extends BaseOfferTest {
 
     @SpyBean
@@ -36,7 +30,7 @@ public class AcceptOrRejectOfferTest extends BaseOfferTest {
     @Test
     public void shouldAcceptExistingOfferAndReturn201Status() throws Exception {
         given(pdfServiceClient.generateFromHtml(any(byte[].class), anyMap()))
-            .willReturn(new byte[]{1, 2, 3, 4});
+            .willReturn(new byte[] {1, 2, 3, 4});
 
         postRequestTo("accept")
             .andExpect(status().isCreated());
@@ -60,7 +54,7 @@ public class AcceptOrRejectOfferTest extends BaseOfferTest {
     @Test
     public void shouldAcceptOfferAndSendNotifications() throws Exception {
         given(pdfServiceClient.generateFromHtml(any(byte[].class), anyMap()))
-            .willReturn(new byte[]{1, 2, 3, 4});
+            .willReturn(new byte[] {1, 2, 3, 4});
 
         runTestAndVerifyNotificationsAreSentWhenEverythingIsOkForResponse("accept");
     }

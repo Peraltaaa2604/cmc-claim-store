@@ -3,7 +3,6 @@ package uk.gov.hmcts.cmc.claimstore.controllers;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.cmc.claimstore.BaseSaveTest;
 import uk.gov.hmcts.cmc.domain.models.Claim;
@@ -41,11 +40,6 @@ import static uk.gov.hmcts.cmc.claimstore.utils.ResourceLoader.unsuccessfulDocum
 import static uk.gov.hmcts.cmc.domain.models.ClaimDocumentType.CLAIM_ISSUE_RECEIPT;
 import static uk.gov.hmcts.cmc.domain.models.ClaimDocumentType.SEALED_CLAIM;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=false",
-    }
-)
 public class SaveClaimWithDocumentManagementTest extends BaseSaveTest {
 
     private static final String EXTENSION = ".pdf";

@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cmc.ccd.domain.CaseEvent;
 import uk.gov.hmcts.cmc.claimstore.exceptions.CoreCaseDataStoreException;
@@ -35,7 +34,6 @@ import static uk.gov.hmcts.cmc.ccd.util.StreamUtil.asStream;
 import static uk.gov.hmcts.cmc.domain.models.ClaimState.CREATE;
 
 @Service
-@ConditionalOnProperty(prefix = "core_case_data", name = "api.url")
 public class CCDCaseApi {
 
     public static final String JURISDICTION_ID = "CMC";
@@ -123,6 +121,11 @@ public class CCDCaseApi {
 
     public List<Claim> getClaimsByState(ClaimState claimState, User user) {
         return extractClaims(searchAll(user, claimState));
+    }
+
+    public List<Claim> getByExternalReference(String externalReference, String authorisation) {
+        User user = userService.getUser(authorisation);
+        return getAllCasesBy(user, ImmutableMap.of("case.externalReferenceNumber", externalReference));
     }
 
     /**

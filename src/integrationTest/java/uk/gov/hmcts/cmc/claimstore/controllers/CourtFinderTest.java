@@ -16,8 +16,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(value = "/environment.properties", properties = {
-    "courtfinder.api.url=http://court-finder-api",
-    "core_case_data.api.url=false"
+    "courtfinder.api.url=http://court-finder-api"
 })
 public class CourtFinderTest extends BaseGetTest {
 

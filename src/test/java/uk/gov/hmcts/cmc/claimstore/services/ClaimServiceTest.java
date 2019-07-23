@@ -16,7 +16,6 @@ import uk.gov.hmcts.cmc.claimstore.exceptions.NotFoundException;
 import uk.gov.hmcts.cmc.claimstore.idam.models.User;
 import uk.gov.hmcts.cmc.claimstore.idam.models.UserDetails;
 import uk.gov.hmcts.cmc.claimstore.repositories.CaseRepository;
-import uk.gov.hmcts.cmc.claimstore.repositories.ClaimRepository;
 import uk.gov.hmcts.cmc.claimstore.rules.ClaimAuthorisationRule;
 import uk.gov.hmcts.cmc.claimstore.rules.ClaimDeadlineService;
 import uk.gov.hmcts.cmc.claimstore.rules.MoreTimeRequestRule;
@@ -85,8 +84,6 @@ public class ClaimServiceTest {
     private ClaimService claimService;
 
     @Mock
-    private ClaimRepository claimRepository;
-    @Mock
     private CaseRepository caseRepository;
 
     @Mock
@@ -107,7 +104,6 @@ public class ClaimServiceTest {
         when(userService.getUserDetails(eq(AUTHORISATION))).thenReturn(VALID_DEFENDANT);
 
         claimService = new ClaimService(
-            claimRepository,
             caseRepository,
             userService,
             issueDateCalculator,
@@ -120,25 +116,6 @@ public class ClaimServiceTest {
             new ClaimAuthorisationRule(userService),
             false
         );
-    }
-
-    @Test
-    public void getClaimByIdShouldCallRepositoryWhenValidClaimIsReturned() {
-
-        Optional<Claim> result = Optional.of(claim);
-
-        when(claimRepository.getById(eq(CLAIM_ID))).thenReturn(result);
-
-        Claim actual = claimService.getClaimById(CLAIM_ID);
-        assertThat(actual).isEqualTo(claim);
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void getClaimByIdShouldThrowNotFoundException() {
-
-        when(claimRepository.getById(eq(CLAIM_ID))).thenReturn(empty());
-
-        claimService.getClaimById(CLAIM_ID);
     }
 
     @Test
@@ -206,7 +183,6 @@ public class ClaimServiceTest {
         when(caseRepository.saveClaim(eq(USER), any())).thenReturn(claim);
 
         claimService = new ClaimService(
-            claimRepository,
             caseRepository,
             userService,
             issueDateCalculator,
@@ -240,7 +216,7 @@ public class ClaimServiceTest {
 
         LocalDate newDeadline = RESPONSE_DEADLINE.plusDays(20);
         when(userService.getUser(eq(AUTHORISATION))).thenReturn(USER);
-        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), any()))
+        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), eq(USER)))
             .thenReturn(Optional.of(claim));
         when(responseDeadlineCalculator.calculatePostponedResponseDeadline(any()))
             .thenReturn(newDeadline);
@@ -254,7 +230,8 @@ public class ClaimServiceTest {
 
     @Test(expected = NotFoundException.class)
     public void requestMoreTimeToRespondShouldThrowNotFoundExceptionWhenClaimNotFound() {
-        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), any())).thenReturn(empty());
+        when(userService.getUser(eq(AUTHORISATION))).thenReturn(USER);
+        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), eq(USER))).thenReturn(empty());
 
         claimService.requestMoreTimeForResponse(EXTERNAL_ID, AUTHORISATION);
     }
@@ -266,7 +243,7 @@ public class ClaimServiceTest {
             .minusDays(10);
         Claim claim = createClaimModel(responseDeadlineInThePast, false);
 
-        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), any()))
+        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), eq(USER)))
             .thenReturn(Optional.of(claim));
         when(userService.getUser(eq(AUTHORISATION))).thenReturn(USER);
 
@@ -279,7 +256,7 @@ public class ClaimServiceTest {
 
         Claim claim = createClaimModel(RESPONSE_DEADLINE, true);
 
-        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), any()))
+        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), eq(USER)))
             .thenReturn(Optional.of(claim));
 
         claimService.requestMoreTimeForResponse(EXTERNAL_ID, AUTHORISATION);
@@ -343,7 +320,7 @@ public class ClaimServiceTest {
     public void paidInFullShouldFinishSuccessfully() {
         when(userService.getUser(eq(AUTHORISATION))).thenReturn(USER);
         when(userService.getUserDetails(AUTHORISATION)).thenReturn(VALID_CLAIMANT);
-        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), any()))
+        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), eq(USER)))
             .thenReturn(Optional.of(claim));
         PaidInFull paidInFull = new PaidInFull(now());
 
@@ -362,7 +339,7 @@ public class ClaimServiceTest {
         when(userService.getUser(eq(AUTHORISATION))).thenReturn(USER);
         when(userService.getUserDetails(AUTHORISATION)).thenReturn(VALID_CLAIMANT);
 
-        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), any()))
+        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), eq(USER)))
             .thenReturn(Optional.of(createPaidInFullClaim(now())));
 
         claimService.paidInFull(EXTERNAL_ID, new PaidInFull(now()), AUTHORISATION);
@@ -370,7 +347,8 @@ public class ClaimServiceTest {
 
     @Test(expected = NotFoundException.class)
     public void paidInFullShouldThrowNotFoundExceptionWhenClaimNotFound() {
-        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), any())).thenReturn(empty());
+        when(userService.getUser(eq(AUTHORISATION))).thenReturn(USER);
+        when(caseRepository.getClaimByExternalId(eq(EXTERNAL_ID), eq(USER))).thenReturn(empty());
 
         claimService.paidInFull(EXTERNAL_ID, new PaidInFull(now()), AUTHORISATION);
     }

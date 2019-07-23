@@ -42,7 +42,6 @@ import static uk.gov.hmcts.cmc.claimstore.utils.ResourceLoader.successfulCoreCas
 
 @TestPropertySource(
     properties = {
-        "core_case_data.api.url=http://core-case-data-api",
         "doc_assembly.url=http://doc-assembly-api"
     }
 )

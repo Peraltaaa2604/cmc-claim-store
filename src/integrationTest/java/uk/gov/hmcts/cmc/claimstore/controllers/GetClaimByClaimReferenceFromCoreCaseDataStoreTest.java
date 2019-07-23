@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.springframework.test.context.TestPropertySource;
 import uk.gov.hmcts.cmc.claimstore.BaseGetTest;
 
 import java.util.Collections;
@@ -15,11 +14,6 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.cmc.claimstore.utils.ResourceLoader.listOfCaseDetails;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=http://core-case-data-api"
-    }
-)
 @Ignore // Ignored until we decide how we are testing against CCD
 public class GetClaimByClaimReferenceFromCoreCaseDataStoreTest extends BaseGetTest {
     private static final String SERVICE_TOKEN = "S2S token";

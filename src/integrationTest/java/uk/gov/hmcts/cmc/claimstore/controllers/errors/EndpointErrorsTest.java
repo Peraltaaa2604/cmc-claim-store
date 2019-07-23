@@ -8,7 +8,6 @@ import org.skife.jdbi.v2.exceptions.UnableToExecuteStatementException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cmc.claimstore.MockSpringTest;
 import uk.gov.hmcts.cmc.claimstore.idam.models.User;
@@ -32,11 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.hmcts.cmc.domain.models.sampledata.SampleClaim.DEFENDANT_EMAIL;
 import static uk.gov.hmcts.cmc.domain.models.sampledata.SampleClaim.DEFENDANT_ID;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=false"
-    }
-)
 @ActiveProfiles("mocked-database-tests")
 public class EndpointErrorsTest extends MockSpringTest {
 
@@ -139,7 +133,7 @@ public class EndpointErrorsTest extends MockSpringTest {
     public void requestForMoreTimeShouldReturn500HttpStatusWhenFailedToRetrieveClaim() throws Exception {
         String externalId = "84f1dda3-e205-4277-96a6-1f23b6f1766d";
 
-        given(caseRepository.getClaimByExternalId(externalId, any())).willThrow(UNEXPECTED_ERROR);
+        given(caseRepository.getClaimByExternalId(externalId, anyString())).willThrow(UNEXPECTED_ERROR);
 
         webClient
             .perform(post("/claims/" + externalId + "/request-more-time")
@@ -188,7 +182,7 @@ public class EndpointErrorsTest extends MockSpringTest {
         Claim claim = SampleClaim.getDefault();
         String externalId = claim.getExternalId();
 
-        given(caseRepository.getClaimByExternalId(externalId, any()))
+        given(caseRepository.getClaimByExternalId(externalId, anyString()))
             .willReturn(Optional.of(claim));
 
         willThrow(UNEXPECTED_ERROR).given(claimRepository).saveDefendantResponse(

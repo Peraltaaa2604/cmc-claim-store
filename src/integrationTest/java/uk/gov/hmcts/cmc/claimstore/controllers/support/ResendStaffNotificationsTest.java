@@ -40,7 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @TestPropertySource(
     properties = {
-        "core_case_data.api.url=false",
         "feature_toggles.async_event_operations_enabled=false"
     }
 )

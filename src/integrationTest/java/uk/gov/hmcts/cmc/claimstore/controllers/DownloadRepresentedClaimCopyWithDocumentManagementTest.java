@@ -2,7 +2,6 @@ package uk.gov.hmcts.cmc.claimstore.controllers;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.cmc.claimstore.controllers.base.BaseDownloadDocumentTest;
 import uk.gov.hmcts.cmc.claimstore.idam.models.User;
@@ -33,11 +32,6 @@ import static uk.gov.hmcts.cmc.claimstore.utils.ResourceLoader.successfulDocumen
 import static uk.gov.hmcts.cmc.claimstore.utils.ResourceLoader.unsuccessfulDocumentManagementUploadResponse;
 import static uk.gov.hmcts.cmc.domain.models.ClaimDocumentType.SEALED_CLAIM;
 
-@TestPropertySource(
-    properties = {
-        "core_case_data.api.url=false"
-    }
-)
 public class DownloadRepresentedClaimCopyWithDocumentManagementTest extends BaseDownloadDocumentTest {
 
     public DownloadRepresentedClaimCopyWithDocumentManagementTest() {

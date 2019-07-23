@@ -2,7 +2,6 @@ package uk.gov.hmcts.cmc.claimstore.services.ccd;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cmc.ccd.domain.CCDCase;
 import uk.gov.hmcts.cmc.ccd.domain.CaseEvent;
@@ -57,7 +56,6 @@ import static uk.gov.hmcts.cmc.domain.models.response.YesNoOption.YES;
 import static uk.gov.hmcts.cmc.domain.utils.LocalDateTimeFactory.nowInUTC;
 
 @Service
-@ConditionalOnProperty(prefix = "core_case_data", name = "api.url")
 public class CoreCaseDataService {
 
     private static final String CMC_CASE_UPDATE_SUMMARY = "CMC case update";
