@@ -20,6 +20,8 @@ import uk.gov.hmcts.cmc.claimstore.repositories.CaseRepository;
 import uk.gov.hmcts.cmc.claimstore.repositories.ClaimRepository;
 import uk.gov.hmcts.cmc.claimstore.repositories.ReferenceNumberRepository;
 import uk.gov.hmcts.cmc.claimstore.repositories.TestingSupportRepository;
+import uk.gov.hmcts.cmc.claimstore.services.IssueDateCalculator;
+import uk.gov.hmcts.cmc.claimstore.services.ResponseDeadlineCalculator;
 import uk.gov.hmcts.cmc.claimstore.services.UserService;
 import uk.gov.hmcts.cmc.claimstore.services.bankholidays.PublicHolidaysCollection;
 import uk.gov.hmcts.cmc.domain.models.Claim;
@@ -110,6 +112,12 @@ public abstract class MockSpringTest {
 
     @Autowired
     protected CaseMapper caseMapper;
+
+    @Autowired
+    protected ResponseDeadlineCalculator responseDeadlineCalculator;
+
+    @Autowired
+    protected IssueDateCalculator issueDateCalculator;
 
     @MockBean
     protected ReferenceNumberRepository referenceNumberRepository;

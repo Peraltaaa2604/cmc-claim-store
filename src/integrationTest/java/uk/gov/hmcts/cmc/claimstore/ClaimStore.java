@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cmc.claimstore;
 
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,18 +67,18 @@ public class ClaimStore {
         UUID externalId = claimData.getExternalId();
         logger.debug("Saving claim: {}", externalId);
 
-        this.claimRepository.saveSubmittedByClaimant(
-            jsonMapper.toJson(claimData),
-            submitterId,
-            SampleClaim.LETTER_HOLDER_ID,
-            LocalDate.now(),
-            responseDeadline,
-            externalId.toString(),
-            SampleClaim.SUBMITTER_EMAIL,
-            "[\"admissions\"]",
-            CREATE,
-            jsonMapper.toJson(ClaimSubmissionOperationIndicators.builder().build())
-        );
+        Claim.builder()
+            .claimData(claimData)
+            .submitterId(submitterId)
+            .letterHolderId(SampleClaim.LETTER_HOLDER_ID)
+            .issuedOn(LocalDate.now())
+            .responseDeadline(responseDeadline)
+            .externalId(externalId.toString())
+            .submitterEmail(SampleClaim.SUBMITTER_EMAIL)
+            .features(ImmutableList.of("admissions"))
+            .state(CREATE)
+            .claimSubmissionOperationIndicators(ClaimSubmissionOperationIndicators.builder().build())
+            .build();
 
         logger.debug("Saved claim for externalId {}.", externalId);
         return getClaimByExternalId(externalId.toString());
