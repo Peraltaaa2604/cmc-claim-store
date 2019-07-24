@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static uk.gov.hmcts.cmc.claimstore.BaseIntegrationTest.FEATURES;
 import static uk.gov.hmcts.cmc.domain.models.ClaimState.CREATE;
 
 @Component
@@ -75,7 +76,7 @@ public class ClaimStore {
             .responseDeadline(responseDeadline)
             .externalId(externalId.toString())
             .submitterEmail(SampleClaim.SUBMITTER_EMAIL)
-            .features(ImmutableList.of("admissions"))
+            .features(FEATURES)
             .state(CREATE)
             .claimSubmissionOperationIndicators(ClaimSubmissionOperationIndicators.builder().build())
             .build();

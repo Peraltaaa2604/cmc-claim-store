@@ -5,10 +5,7 @@ import org.junit.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.gov.hmcts.cmc.claimstore.BaseSaveTest;
-import uk.gov.hmcts.cmc.domain.models.Claim;
 import uk.gov.hmcts.cmc.domain.models.ClaimData;
-import uk.gov.hmcts.cmc.domain.models.ClaimSubmissionOperationIndicators;
-import uk.gov.hmcts.cmc.domain.models.response.YesNoOption;
 import uk.gov.hmcts.cmc.domain.models.sampledata.SampleClaimData;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,23 +30,7 @@ public class SaveClaimWithCoreCaseDataStoreTest extends BaseSaveTest {
     public void shouldStoreRepresentedClaimIntoCCD() throws Exception {
         //given
         ClaimData claimData = SampleClaimData.submittedByLegalRepresentative();
-        startForCaseWorker(SOLICITOR_AUTHORISATION_TOKEN, CREATE_CASE);
-        Claim claim = submitForCaseWorker(claimData, SOLICITOR_AUTHORISATION_TOKEN);
-        uploadDocument(SOLICITOR_AUTHORISATION_TOKEN);
-
-        Claim updated = claim.toBuilder()
-            .claimSubmissionOperationIndicators(ClaimSubmissionOperationIndicators.builder()
-                .sealedClaimUpload(YesNoOption.YES)
-                .staffNotification(YesNoOption.YES)
-                .claimantNotification(YesNoOption.YES)
-                .bulkPrint(YesNoOption.YES)
-                .build())
-            .build();
-
-        startEventForCaseworker(updated, SOLICITOR_AUTHORISATION_TOKEN, ISSUE_CASE);
-        submitEventForCaseworker(updated, SOLICITOR_AUTHORISATION_TOKEN);
-        startEventForCaseworker(updated, SOLICITOR_AUTHORISATION_TOKEN, SEALED_CLAIM_UPLOAD);
-        submitEventForCaseworker(updated, SOLICITOR_AUTHORISATION_TOKEN);
+        setupCreateClaimFlowForRepresentative(claimData);
 
         //when
         makeIssueClaimRequest(claimData, SOLICITOR_AUTHORISATION_TOKEN)
@@ -68,31 +49,7 @@ public class SaveClaimWithCoreCaseDataStoreTest extends BaseSaveTest {
     public void shouldStoreCitizenClaimIntoCCD() throws Exception {
         //given
         ClaimData claimData = SampleClaimData.submittedByClaimantBuilder().build();
-        startForCitizen(AUTHORISATION_TOKEN, CREATE_CASE);
-        Claim claim = submitForCitizen(claimData, AUTHORISATION_TOKEN);
-        uploadDocument(AUTHORISATION_TOKEN);
-        uploadDocument(AUTHORISATION_TOKEN);
-
-        Claim updated = claim.toBuilder()
-            .claimSubmissionOperationIndicators(ClaimSubmissionOperationIndicators.builder()
-                .sealedClaimUpload(YesNoOption.YES)
-                .staffNotification(YesNoOption.YES)
-                .claimantNotification(YesNoOption.YES)
-                .bulkPrint(YesNoOption.YES)
-                .rpa(YesNoOption.YES)
-                .defendantNotification(YesNoOption.YES)
-                .claimIssueReceiptUpload(YesNoOption.YES)
-                .build())
-            .build();
-
-        startUpdateForCitizen(updated, AUTHORISATION_TOKEN, SEALED_CLAIM_UPLOAD);
-        submitUpdateForCitizen(updated, AUTHORISATION_TOKEN);
-
-        startUpdateForCitizen(updated, AUTHORISATION_TOKEN, CLAIM_ISSUE_RECEIPT_UPLOAD);
-        submitUpdateForCitizen(updated, AUTHORISATION_TOKEN);
-
-        startUpdateForCitizen(updated, AUTHORISATION_TOKEN, ISSUE_CASE);
-        submitUpdateForCitizen(updated, AUTHORISATION_TOKEN);
+        setupCreateClaimFlowForCitizen(claimData, FEATURES);
 
         //when
         makeIssueClaimRequest(claimData, AUTHORISATION_TOKEN)

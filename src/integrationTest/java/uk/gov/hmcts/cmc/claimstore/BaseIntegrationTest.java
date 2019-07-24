@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 
@@ -62,6 +63,7 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
     protected static final String JURISDICTION_ID = "CMC";
     protected static final String CASE_TYPE_ID = "MoneyClaimCase";
     protected static final boolean IGNORE_WARNING = true;
+    protected static final List<String> FEATURES = ImmutableList.of("admissions");
 
     @Autowired
     protected ClaimStore claimStore;
@@ -80,7 +82,7 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
             .perform(post("/claims/" + USER_ID)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .header(HttpHeaders.AUTHORIZATION, authorization)
-                .header("Features", ImmutableList.of("admissions"))
+                .header("Features", FEATURES)
                 .content(jsonMapper.toJson(claimData))
             );
     }
@@ -113,20 +115,21 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
         ).willReturn(getStartEventResponse(getCaseDetails(null)));
     }
 
-    public Claim submitForCitizen(ClaimData claimData, String authorisation) {
+    public Claim submitForCitizen(ClaimData claimData, List<String> features, String authorisation) {
         LocalDate issueDate = issueDateCalculator.calculateIssueDay(LocalDateTimeFactory.nowInLocalZone());
         LocalDate responseDeadline = responseDeadlineCalculator.calculateResponseDeadline(issueDate);
-        return submitForCitizen(claimData, "1", issueDate, responseDeadline, authorisation);
+        return submitForCitizen(claimData, features, "1", issueDate, responseDeadline, authorisation);
     }
 
     public Claim submitForCitizen(
         ClaimData claimData,
+        List<String> features,
         String submitterId,
         LocalDate issueDate,
         LocalDate responseDeadline,
         String authorisation
     ) {
-        Claim claim = getClaim(claimData, submitterId, issueDate, responseDeadline);
+        Claim claim = getClaim(claimData, features, submitterId, issueDate, responseDeadline);
 
         given(coreCaseDataApi.submitForCitizen(
             eq(authorisation),
@@ -142,7 +145,13 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
         return claim;
     }
 
-    private Claim getClaim(ClaimData claimData, String submitterId, LocalDate issueDate, LocalDate responseDeadline) {
+    private Claim getClaim(
+        ClaimData claimData,
+        List<String> features,
+        String submitterId,
+        LocalDate issueDate,
+        LocalDate responseDeadline
+    ) {
         return Claim.builder()
             .claimData(claimData)
             .submitterId(submitterId)
@@ -153,7 +162,7 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
             .submitterEmail(SampleClaim.SUBMITTER_EMAIL)
             .createdAt(nowInLocalZone())
             .letterHolderId(SampleClaim.LETTER_HOLDER_ID)
-            .features(ImmutableList.of("admissions"))
+            .features(features)
             .state(CREATE)
             .claimSubmissionOperationIndicators(ClaimSubmissionOperationIndicators.builder().build())
             .referenceNumber(getReferenceNumber(claimData.isClaimantRepresented()))
@@ -193,7 +202,7 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
         LocalDate responseDeadline,
         String authorisation
     ) {
-        Claim claim = getClaim(claimData, submitterId, issueDate, responseDeadline);
+        Claim claim = getClaim(claimData, FEATURES, submitterId, issueDate, responseDeadline);
 
         given(coreCaseDataApi.submitForCaseworker(
             eq(authorisation),

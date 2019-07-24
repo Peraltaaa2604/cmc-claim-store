@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cmc.claimstore.controllers;
 
 import com.google.common.collect.ImmutableList;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -49,9 +50,15 @@ public class SaveClaimTest extends BaseSaveTest {
     @Captor
     private ArgumentCaptor<EmailData> emailDataArgument;
 
+    @Before
+    public void before() {
+
+    }
+
     @Test
     public void shouldReturnNewlyCreatedClaim() throws Exception {
         ClaimData claimData = SampleClaimData.submittedByClaimant();
+        setupCreateClaimFlowForCitizen(claimData, FEATURES);
 
         MvcResult result = makeIssueClaimRequest(claimData, AUTHORISATION_TOKEN)
             .andExpect(status().isOk())
@@ -65,8 +72,9 @@ public class SaveClaimTest extends BaseSaveTest {
     @Test
     public void shouldReturnFeaturesStored() throws Exception {
         ClaimData claimData = SampleClaimData.submittedByClaimant();
-
         ImmutableList<String> features = ImmutableList.of("admissions", "offers");
+        setupCreateClaimFlowForCitizen(claimData, features);
+
 
         MvcResult result = webClient
             .perform(MockMvcRequestBuilders.post("/claims/" + USER_ID)
@@ -88,7 +96,10 @@ public class SaveClaimTest extends BaseSaveTest {
         doThrow(new RuntimeException("Sending failed"))
             .when(emailService).sendEmail(anyString(), any(EmailData.class));
 
-        makeIssueClaimRequest(SampleClaimData.submittedByClaimant(), AUTHORISATION_TOKEN)
+        ClaimData claimData = SampleClaimData.submittedByClaimant();
+        setupCreateClaimFlowForCitizen(claimData, FEATURES);
+
+        makeIssueClaimRequest(claimData, AUTHORISATION_TOKEN)
             .andExpect(status().isInternalServerError());
     }
 
@@ -100,6 +111,7 @@ public class SaveClaimTest extends BaseSaveTest {
             .willThrow(new NotificationClientException(new RuntimeException("invalid email3")));
 
         ClaimData claimData = SampleClaimData.submittedByClaimant();
+        setupCreateClaimFlowForCitizen(claimData, FEATURES);
 
         MvcResult result = makeIssueClaimRequest(claimData, AUTHORISATION_TOKEN)
             .andExpect(status().isOk())
@@ -121,7 +133,10 @@ public class SaveClaimTest extends BaseSaveTest {
     public void shouldSendNotificationsWhenEverythingIsOk() throws Exception {
         given(notificationClient.sendEmail(any(), any(), any(), any())).willReturn(null);
 
-        MvcResult result = makeIssueClaimRequest(SampleClaimData.submittedByLegalRepresentative(), AUTHORISATION_TOKEN)
+        ClaimData claimData = SampleClaimData.submittedByLegalRepresentative();
+        setupCreateClaimFlowForRepresentative(claimData);
+
+        MvcResult result = makeIssueClaimRequest(claimData, SOLICITOR_AUTHORISATION_TOKEN)
             .andExpect(status().isOk())
             .andReturn();
 
@@ -133,7 +148,10 @@ public class SaveClaimTest extends BaseSaveTest {
 
     @Test
     public void shouldSendStaffNotificationsForCitizenClaimIssuedEvent() throws Exception {
-        MvcResult result = makeIssueClaimRequest(SampleClaimData.submittedByClaimant(), AUTHORISATION_TOKEN)
+        ClaimData claimData = SampleClaimData.submittedByClaimant();
+        setupCreateClaimFlowForCitizen(claimData, FEATURES);
+
+        MvcResult result = makeIssueClaimRequest(claimData, AUTHORISATION_TOKEN)
             .andExpect(status().isOk())
             .andReturn();
 
@@ -154,7 +172,9 @@ public class SaveClaimTest extends BaseSaveTest {
 
     @Test
     public void shouldSendStaffNotificationsForLegalClaimIssuedEvent() throws Exception {
-        MvcResult result = makeIssueClaimRequest(SampleClaimData.submittedByLegalRepresentative(), AUTHORISATION_TOKEN)
+        ClaimData claimData = SampleClaimData.submittedByLegalRepresentative();
+        setupCreateClaimFlowForRepresentative(claimData);
+        MvcResult result = makeIssueClaimRequest(claimData, SOLICITOR_AUTHORISATION_TOKEN)
             .andExpect(status().isOk())
             .andReturn();
 
@@ -173,26 +193,22 @@ public class SaveClaimTest extends BaseSaveTest {
     }
 
     @Test
-    public void shouldNotMakeCallToStoreInCoreCaseDataStoreWhenToggledOff() throws Exception {
-        makeIssueClaimRequest(SampleClaimData.submittedByLegalRepresentative(), AUTHORISATION_TOKEN)
-            .andExpect(status().isOk());
-
-        verify(coreCaseDataApi, never())
-            .startForCaseworker(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
-    }
-
-    @Test
     public void shouldNotUploadSealedCopyOfNonRepresentedClaimIntoDocumentManagementStore() throws Exception {
-        assertSealedClaimIsNotUploadedToDocumentManagementStore(SampleClaimData.submittedByClaimant());
+        ClaimData claimData = SampleClaimData.submittedByClaimant();
+        setupCreateClaimFlowForCitizen(claimData, FEATURES);
+        assertSealedClaimIsNotUploadedToDocumentManagementStore(claimData, AUTHORISATION_TOKEN);
     }
 
     @Test
     public void shouldNotUploadSealedCopyOfRepresentedClaimIntoDocumentManagementStore() throws Exception {
-        assertSealedClaimIsNotUploadedToDocumentManagementStore(SampleClaimData.submittedByLegalRepresentative());
+        ClaimData claimData = SampleClaimData.submittedByLegalRepresentative();
+        setupCreateClaimFlowForRepresentative(claimData);
+        assertSealedClaimIsNotUploadedToDocumentManagementStore(claimData, SOLICITOR_AUTHORISATION_TOKEN);
     }
 
-    private void assertSealedClaimIsNotUploadedToDocumentManagementStore(ClaimData claimData) throws Exception {
-        makeIssueClaimRequest(claimData, AUTHORISATION_TOKEN)
+    private void assertSealedClaimIsNotUploadedToDocumentManagementStore(
+        ClaimData claimData, String authorisation) throws Exception {
+        makeIssueClaimRequest(claimData, authorisation)
             .andExpect(status().isOk());
 
         verify(documentUploadClient, never()).upload(any(), any(), any(), any());
