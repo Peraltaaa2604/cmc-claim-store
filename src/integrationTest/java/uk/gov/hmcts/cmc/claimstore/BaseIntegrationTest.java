@@ -95,10 +95,10 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
         );
     }
 
-    protected ResultActions makeGetRequest(String urlTemplate) throws Exception {
+    protected ResultActions makeGetRequest(String urlTemplate, String authorisation) throws Exception {
         return webClient.perform(
             get(urlTemplate)
-                .header(HttpHeaders.AUTHORIZATION, AUTHORISATION_TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, authorisation)
         );
     }
 
@@ -116,20 +116,16 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
     }
 
     public Claim submitForCitizen(ClaimData claimData, List<String> features, String authorisation) {
-        LocalDate issueDate = issueDateCalculator.calculateIssueDay(LocalDateTimeFactory.nowInLocalZone());
-        LocalDate responseDeadline = responseDeadlineCalculator.calculateResponseDeadline(issueDate);
-        return submitForCitizen(claimData, features, "1", issueDate, responseDeadline, authorisation);
+        return submitForCitizen(claimData, features, "1", authorisation);
     }
 
     public Claim submitForCitizen(
         ClaimData claimData,
         List<String> features,
         String submitterId,
-        LocalDate issueDate,
-        LocalDate responseDeadline,
         String authorisation
     ) {
-        Claim claim = getClaim(claimData, features, submitterId, issueDate, responseDeadline);
+        Claim claim = getClaim(claimData, features, submitterId);
 
         given(coreCaseDataApi.submitForCitizen(
             eq(authorisation),
@@ -145,13 +141,10 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
         return claim;
     }
 
-    private Claim getClaim(
-        ClaimData claimData,
-        List<String> features,
-        String submitterId,
-        LocalDate issueDate,
-        LocalDate responseDeadline
-    ) {
+    protected Claim getClaim(ClaimData claimData, List<String> features, String submitterId) {
+        LocalDate issueDate = issueDateCalculator.calculateIssueDay(LocalDateTimeFactory.nowInLocalZone());
+        LocalDate responseDeadline = responseDeadlineCalculator.calculateResponseDeadline(issueDate);
+
         return Claim.builder()
             .claimData(claimData)
             .submitterId(submitterId)
@@ -190,19 +183,15 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
     }
 
     protected Claim submitForCaseWorker(ClaimData claimData, String authorisation) {
-        LocalDate issueDate = issueDateCalculator.calculateIssueDay(LocalDateTimeFactory.nowInLocalZone());
-        LocalDate responseDeadline = responseDeadlineCalculator.calculateResponseDeadline(issueDate);
-        return submitForCaseWorker(claimData, "1", issueDate, responseDeadline, authorisation);
+        return submitForCaseWorker(claimData, "1", authorisation);
     }
 
     protected Claim submitForCaseWorker(
         ClaimData claimData,
         String submitterId,
-        LocalDate issueDate,
-        LocalDate responseDeadline,
         String authorisation
     ) {
-        Claim claim = getClaim(claimData, FEATURES, submitterId, issueDate, responseDeadline);
+        Claim claim = getClaim(claimData, FEATURES, submitterId);
 
         given(coreCaseDataApi.submitForCaseworker(
             eq(authorisation),
@@ -276,6 +265,30 @@ public abstract class BaseIntegrationTest extends MockSpringTest {
             any()
             )
         ).willReturn(buildCaseDetails(claim));
+    }
+
+    protected void searchForCitizen(Claim claim, String authorisation, Map<String, String> searchCriteria) {
+        given(coreCaseDataApi.searchForCitizen(
+            eq(authorisation),
+            eq(SERVICE_TOKEN),
+            eq(USER_ID),
+            eq(JURISDICTION_ID),
+            eq(CASE_TYPE_ID),
+            eq(searchCriteria)
+            )
+        ).willReturn(ImmutableList.of(buildCaseDetails(claim)));
+    }
+
+    protected void searchForRepresentative(Claim claim, String authorisation, Map<String, String> searchCriteria) {
+        given(coreCaseDataApi.searchForCaseworker(
+            eq(authorisation),
+            eq(SERVICE_TOKEN),
+            eq(USER_ID),
+            eq(JURISDICTION_ID),
+            eq(CASE_TYPE_ID),
+            eq(searchCriteria)
+            )
+        ).willReturn(ImmutableList.of(buildCaseDetails(claim)));
     }
 
     protected void verifyStartForCaseworker(String authorisation, CaseEvent caseEvent) {
