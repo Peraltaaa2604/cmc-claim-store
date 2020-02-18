@@ -27,7 +27,7 @@ variable "respond_to_claim_url" {
 }
 
 variable "database-name" {
-  default = "claimstore"
+  default = "cmc"
 }
 
 variable "mail-host" {
@@ -98,4 +98,8 @@ variable "common_tags" {
 
 variable claim_stayed_schedule  {
   default = ""
+}
+
+variable "jddo_enabled" {
+  default = "false"
 }

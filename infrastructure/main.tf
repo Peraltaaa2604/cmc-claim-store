@@ -145,14 +145,6 @@ module "claim-store-api" {
     REFORM_SERVICE_NAME = "${var.microservice}"
     REFORM_ENVIRONMENT = "${var.env}"
 
-    // db vars
-    CLAIM_STORE_DB_HOST = "${var.db_host}"
-    CLAIM_STORE_DB_PORT = "5432"
-    CLAIM_STORE_DB_USERNAME = "claimstore"
-    CLAIM_STORE_DB_PASSWORD = "${data.azurerm_key_vault_secret.db_password.value}"
-    CLAIM_STORE_DB_NAME = "${var.database-name}"
-    CLAIM_STORE_DB_CONNECTION_OPTIONS = "?ssl=true&sslmode=require"
-
     CMC_DB_HOST = "${module.database.host_name}"
     CMC_DB_PORT = "${module.database.postgresql_listen_port}"
     CMC_DB_NAME = "${module.database.postgresql_database}"
@@ -219,6 +211,8 @@ module "claim-store-api" {
     // feature toggles
     CLAIM_STORE_TEST_SUPPORT_ENABLED = "${var.env == "prod" ? "false" : "true"}"
     FEATURE_TOGGLES_SAVE_CLAIM_STATE_ENABLED = "${var.save_claim_state_enabled}"
+    FEATURE_TOGGLES_JDDO = "${var.jddo_enabled}"
+
     //thread pool configs
     ASYNC_MAX_THREADPOOL_SIZE = 50
 
