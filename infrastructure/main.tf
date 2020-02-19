@@ -219,5 +219,7 @@ module "claim-store-api" {
     ROOT_APPENDER = "CMC"
 
     DOCUMENT_MANAGEMENT_USERROLES = "caseworker-cmc,citizen"
+    DOC_ASSEMBLY_TEMPLATEID = "${var.la_directions_order_template_id}"
+    DOC_ASSEMBLY_JUDGETEMPLATEID = "${var.judge_order_template_id}"
   }
 }
