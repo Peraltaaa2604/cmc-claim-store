@@ -100,10 +100,6 @@ variable claim_stayed_schedule  {
   default = ""
 }
 
-variable "jddo_enabled" {
-  default = "false"
-}
-
 variable la_directions_order_template_id {
   default = "CV-CMC-GOR-ENG-0004.docx"
 }
